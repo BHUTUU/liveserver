@@ -1,0 +1,33 @@
+#!/bin/bash
+arg="$@"
+command="hostit ${arg}"
+if [[ $command == 'hostit -k' || $command == 'hostit --kill' ]]; then
+
+  prid=$(ps aux | grep php | awk '{print $2}' |awk 'FNR == 1 {print}')
+  if [[ ! -z $prid ]]
+  then
+    kill -9 $prid > /dev/null 2>&1
+    printf "\e[36mServer killed successfully :)\e[0m\n"
+  fi
+
+else
+
+
+  if ! hash php > /dev/null 2>&1; then
+    printf "  \033[1;36minstalling PHP.............\033[0m\n"
+    echo
+    echo
+    apt install php -y
+    printf "\033[1;34mPlease start hosting your page again\033[0m\n"
+    exit 1
+  fi
+  prid=$(ps aux | grep php | awk '{print $2}' |awk 'FNR == 1 {print}')
+  if [[ ! -z $prid ]]
+  then
+    kill -9 $prid > /dev/null 2>&1
+  fi
+  php -S localhost:8080 > /dev/null 2>&1 &
+  xdg-open http://localhost:8080
+printf "\033[1;32mServer started at \033[4;31m http://localhost:8080\033[0;00m\n"
+printf "\033[1;35mRun 'hostit -k' or 'hostit --kill' to kill the server\033[0m\n"
+fi
