@@ -27,7 +27,7 @@ else
     kill -9 $prid > /dev/null 2>&1
   fi
   php -S localhost:8080 > /dev/null 2>&1 &
-  xdg-open http://localhost:8080
-printf "\033[1;32mServer started at \033[4;31m http://localhost:8080\033[0;00m\n"
+  xdg-open http://localhost:8080/
+printf "\033[1;32mServer started at \033[4;31m http://localhost:8080/\033[0;00m\n"
 printf "\033[1;35mRun 'hostit -k' or 'hostit --kill' to kill the server\033[0m\n"
 fi
