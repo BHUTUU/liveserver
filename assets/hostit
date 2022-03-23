@@ -1,33 +1,184 @@
-#!/bin/bash
-arg="$@"
-command="hostit ${arg}"
-if [[ $command == 'hostit -k' || $command == 'hostit --kill' ]]; then
+#!/usr/bin/env bash
+#set -x
+script="$0"
+CWD=`pwd`
+OS=`uname -o`
+arg1="$1"
+arg2="$2"
+arg3="$3"
+arg4="$4"
+#<<<=====Colors====>>>#
+S0="\033[1;30m" B0="\033[1;40m"
+S1="\033[1;31m" B1="\033[1;41m"
+S2="\033[1;32m" B2="\033[1;42m"
+S3="\033[1;33m" B3="\033[1;43m"
+S4="\033[1;34m" B4="\033[1;44m"
+S5="\033[1;35m" B5="\033[1;45m"
+S6="\033[1;36m" B6="\033[1;46m"
+S7="\033[1;37m" B7="\033[1;47m"
+R0="\033[00m"   R1="\033[1;00m"
+#<---x--->#
+help() {
+echo -e "
+\033[1A${script}:: version: 2.0.0
+    The ${script} command is use to host webpage from commandline.
 
+USAGE:
+    ${script} [FLAGS] [OPTIONS] [VALUES]
+
+FLAGS:
+    -u --update         Update liveserver.
+    -k --kill           Kill all live server.
+
+OPTIONS:
+    -k --kill  [server]        Kill the provided server.
+    -c --cloudflare [PORT]     To do portforwarding on for the provided port.
+"
+}
+#<----function on sigint signal---->
+signal_SIGINT() {
+  printf "\033[?12l\033[?25h"
+  printf "\033[2A\n\n"
+  exit 1
+}
+trap signal_SIGINT SIGINT
+killPhp() {
+  killall php >/dev/null 2>&1
   prid=$(ps aux | grep php | awk '{print $2}' |awk 'FNR == 1 {print}')
   if [[ ! -z $prid ]]
   then
     kill -9 $prid > /dev/null 2>&1
-    printf "\e[36mServer killed successfully :)\e[0m\n"
   fi
-
-else
-
-
-  if ! hash php > /dev/null 2>&1; then
-    printf "  \033[1;36minstalling PHP.............\033[0m\n"
-    echo
-    echo
-    apt install php -y
-    printf "\033[1;34mPlease start hosting your page again\033[0m\n"
-    exit 1
+}
+startPhp() {
+  if [ -f ~/.liveserverLog ]; then
+    rm -rf ~/.liveserverLog > /dev/null 2>&1
   fi
-  prid=$(ps aux | grep php | awk '{print $2}' |awk 'FNR == 1 {print}')
-  if [[ ! -z $prid ]]
-  then
-    kill -9 $prid > /dev/null 2>&1
+  local ip="127.0.0.1"
+  local port="$1"
+  php -S ${ip}:${port} >> ~/.liveserverLog 2>&1 &
+  printf "${S2}[${S4}*${S2}] ${B1} ${script} ${R1} ${S1}::${S4} php server started on \033[3;31m https://${ip}:${port}${R1}${R0}\n"
+}
+internetCheck() {
+  ping -c 1 google.com >/dev/null 2>&1
+  if [[ "$?" != '0' ]]; then
+    printf "${S2}[${S1}!${S2}] ${B1} ${script} ${R1} ${S1}::${S4} Check your internet connection!!${R0}\n"
+    return 1 || false
+  else
+    return true
   fi
-  php -S localhost:8080 > /dev/null 2>&1 &
-  xdg-open http://localhost:8080/
-printf "\033[1;32mServer started at \033[4;31m http://localhost:8080/\033[0;00m\n"
-printf "\033[1;35mRun 'hostit -k' or 'hostit --kill' to kill the server\033[0m\n"
-fi
+}
+repoInstall() {
+  insMessage() {
+    printf "${S2}[${S4}+${S2}] ${B1} ${script} ${R1} ${S1}::${S4} Installing BHUTUU's aptitude repository.....${R0}\n"
+  }
+  if [[ "${OS,,}" == *'android'* ]]; then
+    if [[ "${CWD,,}" == *'com.termux'* ]]; then
+      if [ ! -f $PREFIX/etc/apt/sources.list.d/bhutuu.repo.list ]; then
+        insMessage
+        internetCheck || continue
+        source <(curl -fsSL "https://git.io/JMn0r") --install
+      fi
+    elif [[ "${CWD,,}" == *'hilled.pwnterm'* ]]; then
+      if [ ! -f $PREFIX/etc/apt/sources.list.d/bhutuu.pwn.repo.list ]; then
+        insMessage
+        internetCheck || continue
+        source <(curl -fsSL "https://git.io/JDsJh") --install
+      fi
+    else
+      if [ ! -f /usr/etc/apt/sources.list.d/bhutuu.root.repo.list ]; then
+        insMessage
+        internetCheck || continue
+        source <(curl -fsSL "https://git.io/JDnQB") --install
+      fi
+    fi
+  else
+    if [ ! -f /usr/etc/apt/sources.list.d/bhutuu.root.repo.list ]; then
+      insMessage
+      internetCheck || continue
+      source <(curl -fsSL "https://git.io/JDnQB") --install
+    fi
+  fi
+}
+#<<<======Cloudflare======>>>#
+cloudflareInstall() {
+  if ! hash cloudflared >/dev/null 2>&1; then
+    if [[ ${OS,,} == *'android'* ]]; then
+      source <(curl -fsSL "https://git.io/JinSa")
+    else
+      sudo source <(curl -fsSL "https://git.io/JinSa")
+    fi
+  fi
+}
+cloudflareServer() {
+  local port="$1"
+  if [ -f ~/.cloudflare-log.txt ]; then
+    rm -rf ~/.cloudflare-log.txt > /dev/null 2>&1
+  fi
+  if [[ ${OS,,} == *'android'* ]]; then
+    termux-chroot cloudflared -url 127.0.0.1:${port} --logfile ~/.cloudflare-log.txt > /dev/null 2>&1 &
+  else
+    cloudflared -url 127.0.0.1:${port} --logfile ~/.cloudflare-log.txt > /dev/null 2>&1 &
+  fi
+  sleep 1
+  printf "\033[?25l"
+  while true; do
+    link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' "$HOME/.cloudflare-log.txt")
+    if [ ! -z $link ]; then
+      printf "                                                 \033[?12l\033[?25h"
+      printf "\n${S7}%s${R0}\n" "$link"
+      break
+    else
+      printf "${S2}Generating link. please wait${S4}    ${R0}\r"; sleep 0.1
+      printf "${S2}Generating link. please wait${S4}.   ${R0}\r"; sleep 0.1
+      printf "${S2}Generating link. please wait${S4}..  ${R0}\r"; sleep 0.1
+      printf "${S2}Generating link. please wait${S4}... ${R0}\r"; sleep 0.1
+      printf "${S2}Generating link. please wait${S4}....${R0}\r"; sleep 0.1
+    fi
+  done
+  printf "\033[?12l\033[?25h"
+}
+#<<<======Main=======>>>#
+main() {
+  if [[ -z $arg1 ]]; then
+    killPhp
+    startPhp "8080"
+    xdg-open "http://127.0.0.1:8080"
+  fi
+  if [[ $arg1 == "-h" || $arg1 == "--help" ]]; then
+    help
+  fi
+  if [[ $arg1 == "-u" || $arg1 == "--update" ]]; then
+    repoInstall
+    apt reinstall liveserver -y
+  fi
+  if [[ $arg1 == "-f" || $arg1 == "--forward" ]]; then
+    if [[ $arg2 == "c" || $arg2 == "cloudflare" ]]; then
+      cloudflareInstall
+      killPhp
+      if [ ! -z $arg3 ]; then
+        startPhp "$arg3"
+        xdg-open "http://127.0.0.1:${arg3}"
+        cloudflareServer "$arg3"
+      else
+        startPhp "8080"
+        xdg-open "http://127.0.0.1:8080"
+        cloudflareServer "8080"
+      fi
+    fi
+  fi
+  if [[ $arg1 == "-k" || $arg1 == "--kill" ]]; then
+    if [[ $arg2 == "cloudflare" ]]; then
+      killall cloudflared > /dev/null 2>&1
+      printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}cloudflare server killed${R0}\n"
+    elif [[ $arg2 == "php" ]]; then
+      killPhp
+      printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}php server killed${R0}\n"
+    else
+      killPhp
+      killall cloudflared >/dev/null 2>&1
+      printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}liveserver killed${R0}\n"
+    fi
+  fi
+}
+main
