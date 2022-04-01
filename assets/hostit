@@ -20,7 +20,7 @@ R0="\033[00m"   R1="\033[1;00m"
 #<---x--->#
 help() {
 echo -e "
-\033[1A${script}:: version: 2.0.1
+\033[1A${script}:: version: 2.0.2
     The ${script} command is use to host webpage from commandline.
 
 USAGE:
@@ -153,7 +153,7 @@ main() {
     help
   fi
   if [[ $arg1 == "-v" || $arg1 == "--version" ]]; then
-    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.1${R0}\n"
+    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.2${R0}\n"
   fi
   if [[ $arg1 == "-u" || $arg1 == "--update" ]]; then
     repoInstall
@@ -169,7 +169,7 @@ main() {
           cloudflareServer "8080"
         else
           startPhp "$arg3"
-          if [[ $arg4 == '-s' || $arg == '--silent' ]]; then
+          if [[ $arg4 == '-s' || $arg4 == '--silent' ]]; then
             :
           else
             xdg-open "http://127.0.0.1:${arg3}"
