@@ -20,10 +20,10 @@ R0="\033[00m"   R1="\033[1;00m"
 #<---x--->#
 help() {
 echo -e "
-\033[1A${script}:: version: 2.0.2
+\033[1A${script}:: version: 2.0.3
     The ${script} command is use to host webpage from commandline.
 
-USAGE:
+USAGE00:
     ${script} [FLAGS] [OPTIONS] [VALUES]
 
 FLAGS:
@@ -58,7 +58,7 @@ startPhp() {
   local ip="127.0.0.1"
   local port="$1"
   php -S ${ip}:${port} >> ~/.liveserverLog 2>&1 &
-  printf "${S2}[${S4}*${S2}] ${B1} ${script} ${R1} ${S1}::${S4} php server started on \033[3;31m https://${ip}:${port}${R1}${R0}\n"
+  printf "${S2}[${S4}*${S2}] ${B1} ${script} ${R1} ${S1}::${S4} php server started on \033[3;31m http://${ip}:${port}${R1}${R0}\n"
 }
 internetCheck() {
   ping -c 1 google.com >/dev/null 2>&1
@@ -153,7 +153,7 @@ main() {
     help
   fi
   if [[ $arg1 == "-v" || $arg1 == "--version" ]]; then
-    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.2${R0}\n"
+    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.3${R0}\n"
   fi
   if [[ $arg1 == "-u" || $arg1 == "--update" ]]; then
     repoInstall
