@@ -20,10 +20,10 @@ R0="\033[00m"   R1="\033[1;00m"
 #<---x--->#
 help() {
 echo -e "
-\033[1A${script}:: version: 2.0.3
+\033[1A${script}:: version: 2.0.6
     The ${script} command is use to host webpage from commandline.
 
-USAGE00:
+USAGE:
     ${script} [FLAGS] [OPTIONS] [VALUES]
 
 FLAGS:
@@ -32,8 +32,12 @@ FLAGS:
     -s --silent         To avoid automatic browser opening.
 
 OPTIONS:
-    -k --kill  [server]        Kill the provided server.
-    -c --cloudflare [PORT]     To do portforwarding on for the provided port.
+    -k --kill  [server]                  Kill the provided server.
+    -f c --forward cloudflare [PORT]     To do portforwarding on for the provided port.
+
+EXAMPLE:
+    ${script} -f c 8080       Forwarding on port 8080 and open browser at localhost.
+    ${script} -f c 8080 -s    Forwarding on port 8080 and avoid opening browser.
 "
 }
 #<----function on sigint signal---->
@@ -153,7 +157,7 @@ main() {
     help
   fi
   if [[ $arg1 == "-v" || $arg1 == "--version" ]]; then
-    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.3${R0}\n"
+    printf "${S2}${script}${S1} ::${S4} version${S7}:${S3} 2.0.6${R0}\n"
   fi
   if [[ $arg1 == "-u" || $arg1 == "--update" ]]; then
     repoInstall
