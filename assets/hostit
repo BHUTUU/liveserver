@@ -48,8 +48,7 @@ signal_SIGINT() {
 }
 trap signal_SIGINT SIGINT
 killPhp() {
-  killall php >/dev/null 2>&1
-  prid=$(ps aux | grep php | awk '{print $2}' |awk 'FNR == 1 {print}')
+  prid=$(ps aux | grep php | awk '{print $2}')
   if [[ ! -z $prid ]]
   then
     kill -9 $prid > /dev/null 2>&1
