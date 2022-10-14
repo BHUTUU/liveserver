@@ -188,14 +188,22 @@ main() {
   fi
   if [[ $arg1 == "-k" || $arg1 == "--kill" ]]; then
     if [[ $arg2 == "cloudflare" ]]; then
-      killall cloudflared > /dev/null 2>&1
+      if [[ ${OS,,} == *'android'* ]]; then
+        proot pkill cloudflared >/dev/null 2>&1
+      else
+        pkill cloudflared >/dev/null 2>&1
+      fi
       printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}cloudflare server killed${R0}\n"
     elif [[ $arg2 == "php" ]]; then
       killPhp
       printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}php server killed${R0}\n"
     else
       killPhp
-      killall cloudflared >/dev/null 2>&1
+      if [[ ${OS,,} == *'android'* ]]; then
+        proot pkill cloudflared >/dev/null 2>&1
+      else
+        pkill cloudflared >/dev/null 2>&1
+      fi
       printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}liveserver killed${R0}\n"
     fi
   fi
