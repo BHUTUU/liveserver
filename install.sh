@@ -53,6 +53,22 @@ function Linux() {
     chmod +x /usr/bin/hostit
   fi
 }
+function Windows() {
+  if [[ ${OS,,} == 'msys' ]]; then
+    cd /c/Program\ Files/Git/usr/bin >/dev/null 2>&1
+    rm -rf hostit >/dev/null 2>&1
+    cd ../share
+    rm -rf liveserver >/dev/null 2>&1
+    cd $CWD
+    if [ -f $CWD/assets/hostit ]; then
+      cp -r $CWD/assets/hostit /c/Program\ Files/Git/usr/bin/ >/dev/null 2>&1
+    else
+      wget "https://raw.githubusercontent.com/BHUTUU/liveserver/main/assets/hostit" >/dev/null 2>&1
+      cp -r hostit /c/Program\ Files/Git/usr/bin >/dev/null 2>&1
+    fi
+  fi
+  chmod +x /c/Prorgram\ Files/Git/usr/bin/hostit >/dev/null 2>&1
+}
 function Install() {
   if hash hostit &>/dev/null; then
     preversion="`cat $PREFIX/bin/hostit |grep version: | awk '{print $3}'`"
@@ -72,6 +88,8 @@ function Install() {
       Android
     elif [[ ${OS,,} == *'linux'* ]]; then
       Linux
+    elif [[ ${OS,,} == 'msys' ]]; then
+      Windows
     else
       printf "${S2}[${S1}!${S2}]${S4} Unsupported Operating System!!${R0}\n"
     fi

@@ -48,10 +48,14 @@ signal_SIGINT() {
 }
 trap signal_SIGINT SIGINT
 killPhp() {
-  prid=$(ps aux | grep php | awk '{print $2}')
-  if [[ ! -z $prid ]]
-  then
-    kill -9 $prid > /dev/null 2>&1
+  if [[ ${OS,,} == 'msys' ]]; then
+    kill $(ps aux | grep php | awk '{print $1}')
+  else
+    prid=$(ps aux | grep php | awk '{print $2}')
+    if [[ ! -z $prid ]]
+    then
+      kill -9 $prid > /dev/null 2>&1
+    fi
   fi
 }
 startPhp() {
@@ -96,6 +100,8 @@ repoInstall() {
         source <(curl -fsSL "https://git.io/JDnQB") --install
       fi
     fi
+  elif [[ ${OS,,} == "msys" ]]; then
+    :
   else
     if [ ! -f /usr/etc/apt/sources.list.d/bhutuu.root.repo.list ]; then
       insMessage
@@ -109,9 +115,37 @@ cloudflareInstall() {
   if ! hash cloudflared >/dev/null 2>&1; then
     if [[ ${OS,,} == *'android'* ]]; then
       source <(curl -fsSL "https://git.io/JinSa")
+    elif [[ ${OS,,} == 'msys' ]]; then
+      if [ -f 'setup.sh' ]; then
+        mv setup.sh .goawaysetup.sh >/dev/null 2>&1
+      fi
+      wget -q "https://raw.githubusercontent.com/BHUTUU/cloudflare-installer/main/setup.sh" >/dev/null 2>&1
+      bash setup.sh
+      rm setup.sh >/dev/null 2>&1
+      if [ -f '.goawaysetup.sh' ]; then
+        mv -v .goawaysetup.sh setup.sh >/dev/null 2>&1
+      fi
     else
       sudo source <(curl -fsSL "https://git.io/JinSa")
     fi
+  fi
+}
+launch() {
+  if [[ ${OS,,} == 'msys' ]]; then
+    start $1
+  else
+    xdg-open $1
+  fi
+}
+killCloudflare() {
+  if [[ ${OS,,} == 'msys' ]]; then
+    if [ ! -z $(ps aux | grep clouflared) ]; then
+      kill $(ps aux | grep 'cloudflared' | awk '{print $1}') >/dev/null 2>&1
+    fi
+  elif [[ ${OS,,} == *'android'* ]]; then
+    proot pkill cloudflared >/dev/null 2>&1
+  else
+    pkill cloudflared >/dev/null 2>&1
   fi
 }
 cloudflareServer() {
@@ -145,9 +179,9 @@ cloudflareServer() {
 #<<<======Main=======>>>#
 main() {
   if [[ -z $arg1 ]]; then
-    killPhp
+    killPhp >/dev/null 2>&1
     startPhp "8080"
-    xdg-open "http://127.0.0.1:8080"
+    launch "http://127.0.0.1:8080"
   elif [[ $arg1 == '-s' || $arg1 == '--silent' ]]; then
     killPhp
     startPhp "8080"
@@ -175,13 +209,13 @@ main() {
           if [[ $arg4 == '-s' || $arg4 == '--silent' ]]; then
             :
           else
-            xdg-open "http://127.0.0.1:${arg3}"
+            launch "http://127.0.0.1:${arg3}"
           fi
          cloudflareServer "$arg3"
         fi
       else
         startPhp "8080"
-        xdg-open "http://127.0.0.1:8080"
+        launch "http://127.0.0.1:8080"
         cloudflareServer "8080"
       fi
     fi
@@ -199,11 +233,7 @@ main() {
       printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}php server killed${R0}\n"
     else
       killPhp
-      if [[ ${OS,,} == *'android'* ]]; then
-        proot pkill cloudflared >/dev/null 2>&1
-      else
-        pkill cloudflared >/dev/null 2>&1
-      fi
+      killCloudflare
       printf "${S2}[${S4}*${S2}] ${S4}${script} ${S1}:: ${S2}liveserver killed${R0}\n"
     fi
   fi
